@@ -7,9 +7,10 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
 
   const validationPipeOptions = {
@@ -35,6 +36,7 @@ async function bootstrap(): Promise<void> {
     .useGlobalPipes(new ValidationPipe(validationPipeOptions))
     .useGlobalFilters(new HttpExceptionFilter(new Logger()))
     .enableCors(corsOptions);
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   SwaggerModule.setup('api-docs', app, document);
